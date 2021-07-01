@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.it.herb.board.model.BoardDAO">
+	<sql id="searchWhere">
+		<if test="searchKeyword!=null and searchKeyword!=''">
+			where ${searchCondition}  like '%' || #{searchKeyword} || '%'
+		</if>
+	</sql>
+	
+	<insert id="insertBoard" parameterType="boardVo">
+		<selectKey resultType="int" keyProperty="no" order="BEFORE">
+			select board_seq.nextval from dual
+		</selectKey>
+		insert into board(no, name, pwd, title, email, content,fileName,
+		fileSize, originFileName, groupNo)
+		values(#{no}, #{name}, #{pwd}, #{title}, #{email}, 
+			#{content}, #{fileName}, #{fileSize}, #{originalFileName}, #{groupNo})
+	</insert>
+	
+	<!-- <select id="selectAll" parameterType="searchVo" resultType="boardVo">
+		select * from board
+		<if test="searchKeyword!=null and searchKeyword!=''">
+			where ${searchCondition}  like '%' || #{searchKeyword} || '%'
+		</if>
+		order by no desc
+	</select> -->
+	
+ 	
+	<select id="selectAll" parameterType="searchVo" resultType="boardVo">
+		select *
+		from
+		(
+		    select rownum as RNUM,A.*
+		    from
+		    (
+		        select * from board 
+		        <include refid="searchWhere"></include>
+		        order by no desc
+		    )A
+		)
+		<![CDATA[
+		where RNUM > #{firstRecordIndex} 
+		and RNUM <= #{firstRecordIndex} + #{recordCountPerPage}
+		]]>
+	</select>
+
+	<select id="selectTotalRecord" parameterType="SearchVo"
+		resultType="int">
+		select count(*) from board 
+        <include refid="searchWhere"></include>
+	</select>
+ 
+	 <update id="updateReadCount" parameterType="int">
+	 	update board
+		set readcount=readcount+1
+		where no=#{no}
+	 </update>
+	 
+	 <select id="selectByNo" parameterType="int" resultType="boardVo">
+	 	select * from board where no=#{no}
+	 </select>
+	 
+	 <select id="selectPwd" parameterType="int" resultType="String">
+	 	select pwd from board
+	 	where no=#{no}
+	 </select>
+	 
+	 <update id="updateBoard" parameterType="boardVo">
+	 	update board 
+	 	set name=#{name}, title=#{title}, email=#{email}, content=#{content}
+		where no=#{no}
+	 </update>
+	 
+	 <delete id="deleteBoard" parameterType="int">
+	 	delete from board where no=#{no}
+	 </delete>
+ </mapper>
+
+
+
+
+
+
+
+
+
